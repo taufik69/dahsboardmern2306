@@ -10,74 +10,93 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
+import { useForm } from "react-hook-form";
+import { successToast } from "../../utils/Toast";
+import {
+  useGetAllCategoryQuery,
+  useUploadCategoryMutation,
+} from "../../Features/Api/exclusiveApi";
 const Category = () => {
   const [open, setOpen] = React.useState(false);
-  const TABLE_HEAD = ["Name", "Description", "Date", "Actions"];
-  const TABLE_ROWS = [
-    {
-      name: "John Michael",
-      job: "Manager",
-      date: "23/04/18",
-    },
-    {
-      name: "Alexa Liras",
-      job: "Developer",
-      date: "23/04/18",
-    },
-    {
-      name: "Laurent Perrier",
-      job: "Executive",
-      date: "19/09/17",
-    },
-    {
-      name: "Michael Levi",
-      job: "Developer",
-      date: "24/12/08",
-    },
-    {
-      name: "Richard Gran",
-      job: "Manager",
-      date: "04/10/21",
-    },
-    {
-      name: "Richard Gran",
-      job: "Manager",
-      date: "04/10/21",
-    },
-    {
-      name: "Michael Levi",
-      job: "Developer",
-      date: "24/12/08",
-    },
-    {
-      name: "Richard Gran",
-      job: "Manager",
-      date: "04/10/21",
-    },
-    {
-      name: "Richard Gran",
-      job: "Manager",
-      date: "04/10/21",
-    },
-    {
-      name: "Michael Levi",
-      job: "Developer",
-      date: "24/12/08",
-    },
+  const [uploadCategory, { isLoading }] = useUploadCategoryMutation();
+  const {
+    isLoading: categoryLoading,
+    data,
+    isError,
+  } = useGetAllCategoryQuery();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const TABLE_HEAD = [
+    "Name",
+    "Description",
+    "isActive",
+    "Total Product",
+    "Actions",
   ];
+
   const handleOpen = () => setOpen(!open);
+  // Main form submit handler
+  const handleCategory = async (data) => {
+    try {
+      const response = await uploadCategory({
+        name: data.name,
+        description: data.Descrioption,
+      });
+
+      if (response?.data?.data) {
+        successToast("Category Upload Successfully");
+      }
+    } catch (error) {
+      console.log("Error from upload category:", error);
+    } finally {
+      reset();
+    }
+  };
+
+  console.log(data?.data);
+
   return (
     <div className="flex flex-col gap-y-5">
-      <Input size="md" label=" Name" color="black" />
-      <Textarea color="gray" label="Descrioption" />
-      <Button
-        variant="filled"
-        color="green"
-        loading={false}
-        className="w-[10%]"
+      <form
+        id="mainForm"
+        className="flex flex-col gap-y-5"
+        onSubmit={handleSubmit(handleCategory)}
       >
-        Upload
-      </Button>
+        <Input
+          size="md"
+          label="Name"
+          color="black"
+          {...register("name", { required: true, maxLength: 20 })}
+        />
+        {errors.name && (
+          <span className="text-red-500">
+            Please fill the title (max 20 characters).
+          </span>
+        )}
+        <Textarea
+          color="gray"
+          label="Descrioption"
+          {...register("Descrioption", { required: true })}
+        />
+        {errors.Descrioption && (
+          <span className="text-red-500">Please fill the Descrioption .</span>
+        )}
+        <Button
+          variant="filled"
+          type="submit"
+          color="green"
+          loading={isLoading}
+          form="mainForm"
+          className="w-[20%]"
+        >
+          Upload
+        </Button>
+      </form>
 
       {/* category list */}
       <Card className="h-[575px] mt-10 w-full overflow-y-scroll">
@@ -101,52 +120,64 @@ const Category = () => {
             </tr>
           </thead>
           <tbody>
-            {TABLE_ROWS.map(({ name, job, date }, index) => {
-              const isLast = index === TABLE_ROWS.length - 1;
-              const classes = isLast
-                ? "p-4"
-                : "p-4 border-b border-blue-gray-50 text-center";
+            {data?.data
+              ?.slice()
+              ?.reverse()
+              ?.map(({ name, description, isActive, product }, index) => {
+                const isLast = index === data?.data?.length - 1;
+                const classes = isLast
+                  ? "p-4"
+                  : "p-4 border-b border-blue-gray-50 text-center";
 
-              return (
-                <tr key={name}>
-                  <td className={classes}>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal"
-                    >
-                      {name}
-                    </Typography>
-                  </td>
-                  <td className={classes}>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal"
-                    >
-                      {job}
-                    </Typography>
-                  </td>
-                  <td className={classes}>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal"
-                    >
-                      {date}
-                    </Typography>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex items-center gap-x-3 justify-center">
-                      <Button color="red">Delete</Button>
-                      <Button color="green" onClick={handleOpen}>
-                        Edit
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={name}>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
+                      >
+                        {name}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal  w-[95%] truncate"
+                      >
+                        {description}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
+                      >
+                        {isActive ? "True" : "False"}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
+                      >
+                        {product?.length}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <div className="flex items-center gap-x-3 justify-center">
+                        <Button color="red">Delete</Button>
+                        <Button color="green" onClick={handleOpen}>
+                          Edit
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </Card>

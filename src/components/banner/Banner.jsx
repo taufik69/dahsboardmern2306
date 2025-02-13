@@ -10,22 +10,31 @@ import {
 import React, { useState } from "react";
 import {
   useGetAllBannerQuery,
+  useUpdateBannerMutation,
   useUploadBannerMutation,
 } from "../../Features/Api/exclusiveApi";
 import { useForm } from "react-hook-form";
 import { successToast } from "../../utils/Toast";
+import { isCheckValue } from "../../lib/ValueCheker";
 
 const Banner = () => {
   const [open, setOpen] = useState(false);
   const [tempBannerData, setTempBannerData] = useState({});
   const [updatedData, setUpdatedData] = useState({
+    _id: "",
     name: "",
     image: "",
   });
 
   // Toggle dialog open state and set data for editing
   const handleOpen = (item) => {
-    if (item) setTempBannerData(item);
+    if (item) {
+      setTempBannerData(item);
+      setUpdatedData({
+        ...updatedData,
+        _id: item._id,
+      });
+    }
     setOpen((prev) => !prev);
   };
 
@@ -42,6 +51,7 @@ const Banner = () => {
   } = useForm();
 
   const [UploadBanner, { isLoading }] = useUploadBannerMutation();
+  const [UpdateBanner, { isLoading: isUpdating }] = useUpdateBannerMutation();
   const { data: bannerData } = useGetAllBannerQuery();
 
   // Main form submit handler
@@ -51,7 +61,6 @@ const Banner = () => {
       formData.append("image", data.image[0]);
       formData.append("name", data.name);
       const response = await UploadBanner(formData);
-      console.log(response.data.data);
       if (response.data.data) {
         successToast("Banner Upload Successfully");
       }
@@ -63,21 +72,37 @@ const Banner = () => {
   };
 
   // Dialog (update) form submit handler
-  const handlUpdateBanner = async (data) => {
+  const handlUpdateBanner = async () => {
     try {
-      // You can process updated data here.
-      // For example, you might create FormData and update the banner.
-      console.log("Update form data:", data);
-      // After successful update, you may want to close the dialog:
-      setOpen(false);
+      const newUpdatedData = isCheckValue(updatedData);
+      if (newUpdatedData == false) {
+        console.log("updateded data is blank or not fillup");
+        return;
+      }
+      const actualUpdateData = {};
+      for (let key in newUpdatedData) {
+        if (key == "_id") {
+          continue;
+        } else {
+          actualUpdateData[key] = newUpdatedData[key];
+        }
+      }
+
+      const response = await UpdateBanner({
+        data: actualUpdateData,
+        id: updatedData._id,
+      });
+
+      if (response.data.data) {
+        successToast("Banner Update Successfully");
+      }
     } catch (error) {
       console.log("Error from update banner:", error);
     } finally {
       reset();
+      setOpen(false);
     }
   };
-
-  console.log(updatedData);
 
   return (
     <div className="flex flex-col gap-y-5">
@@ -249,6 +274,8 @@ const Banner = () => {
               label="Banner Title"
               color="black"
               defaultValue={tempBannerData.name}
+              onClick={(e) => (e.target.value = "")}
+              // onBlur={(e) => (e.target.value = tempBannerData.name)}
               onChange={(e) =>
                 setUpdatedData({ ...updatedData, name: e.target.value })
               }
