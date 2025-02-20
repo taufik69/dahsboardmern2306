@@ -1,6 +1,7 @@
 import Banner from "./components/banner/Banner";
 import BestSelling from "./components/BestSellling/BestSelling";
 import Category from "./components/Category/Category";
+import View from "./components/CommonComponent/View";
 import Contact from "./components/Contact/Contact";
 import FlashSale from "./components/FlashSale/FlashSale";
 import Order from "./components/Order/Order";
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
         <Route path="/order" element={<Order />}></Route>
         <Route path="/contact" element={<Contact />}></Route>
         <Route path="/order/:id" element={<SingleOrder />}></Route>
+        <Route path="/view/:id" element={<View />}></Route>
       </Route>
       <Route path="/signup" element={<SignUp />}></Route>
 

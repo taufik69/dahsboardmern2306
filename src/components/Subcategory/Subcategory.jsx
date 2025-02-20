@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Textarea,
   Input,
@@ -6,14 +6,20 @@ import {
   Card,
   Typography,
   Dialog,
-  DialogHeader,
   DialogBody,
   DialogFooter,
   Select,
   Option,
 } from "@material-tailwind/react";
+import { useGetAllCategoryQuery } from "../../Features/Api/exclusiveApi";
 const Subcategory = () => {
-  const [open, setOpen] = React.useState(false);
+  const { data, isLoading } = useGetAllCategoryQuery();
+  const [subcategory, setsubcategory] = useState({
+    name: "",
+    description: " ",
+    category: "",
+  });
+  const [open, setOpen] = useState(false);
   const TABLE_HEAD = [" Name", "Category", "Date", "Actions"];
   const TABLE_ROWS = [
     {
@@ -68,16 +74,53 @@ const Subcategory = () => {
     },
   ];
   const handleOpen = () => setOpen(!open);
+
+  // onchnage handler
+
+  console.log(subcategory);
+
   return (
     <div className="flex flex-col gap-y-5">
-      <Input size="md" label="SubCategory Name" color="black" />
-      <Select color="purple" label="Select Category">
-        <Option>Material Tailwind HTML</Option>
-        <Option>Material Tailwind React</Option>
-        <Option>Material Tailwind Vue</Option>
-        <Option>Material Tailwind Angular</Option>
-        <Option>Material Tailwind Svelte</Option>
-      </Select>
+      <Input
+        size="md"
+        label="SubCategory Name"
+        color="black"
+        name="name"
+        onChange={(e) =>
+          setsubcategory({
+            ...subcategory,
+            name: e.target.value,
+          })
+        }
+      />
+      <Textarea
+        color="gray"
+        label="Descrioption"
+        name="description"
+        onChange={(e) =>
+          setsubcategory({
+            ...subcategory,
+            description: e.target.value,
+          })
+        }
+      />
+      {data?.data && (
+        <Select
+          label="Select Category"
+          onChange={(e) => setsubcategory({ ...subcategory, category: e })}
+        >
+          {data?.data?.map((category) => (
+            <Option
+              key={category?._id}
+              value={category?._id}
+              className="capitalize"
+            >
+              {category?.name}
+            </Option>
+          ))}
+        </Select>
+      )}
+
       <Button
         variant="filled"
         color="green"

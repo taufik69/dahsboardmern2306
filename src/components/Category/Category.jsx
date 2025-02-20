@@ -13,12 +13,17 @@ import {
 import { useForm } from "react-hook-form";
 import { successToast } from "../../utils/Toast";
 import {
+  useDeleteCategoryMutation,
   useGetAllCategoryQuery,
   useUploadCategoryMutation,
 } from "../../Features/Api/exclusiveApi";
+import { Link, useNavigate } from "react-router-dom";
 const Category = () => {
   const [open, setOpen] = React.useState(false);
+  const navigate = useNavigate();
   const [uploadCategory, { isLoading }] = useUploadCategoryMutation();
+  const [DeleteCategory, { isLoading: deleteCategoryLoading }] =
+    useDeleteCategoryMutation();
   const {
     isLoading: categoryLoading,
     data,
@@ -58,8 +63,23 @@ const Category = () => {
     }
   };
 
-  console.log(data?.data);
+  const handleDeleteCategory = async (id) => {
+    try {
+      const response = await DeleteCategory(id);
+      if (response?.data?.data) {
+        successToast("Category Deleted Successfully");
+      }
+      console.log(response);
+    } catch (error) {
+      console.log("Error from delete category:", error);
+    }
+  };
 
+  // handleEdit
+  const handleEdit = (id) => {
+    console.log("Edit id:", id);
+    navigate(`/view/${id}`);
+  };
   return (
     <div className="flex flex-col gap-y-5">
       <form
@@ -123,7 +143,7 @@ const Category = () => {
             {data?.data
               ?.slice()
               ?.reverse()
-              ?.map(({ name, description, isActive, product }, index) => {
+              ?.map(({ name, description, isActive, product, _id }, index) => {
                 const isLast = index === data?.data?.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -169,8 +189,14 @@ const Category = () => {
                     </td>
                     <td className={classes}>
                       <div className="flex items-center gap-x-3 justify-center">
-                        <Button color="red">Delete</Button>
-                        <Button color="green" onClick={handleOpen}>
+                        <Button
+                          color="red"
+                          loading={deleteCategoryLoading}
+                          onClick={() => handleDeleteCategory(_id)}
+                        >
+                          Delete
+                        </Button>
+                        <Button color="green" onClick={() => handleEdit(_id)}>
                           Edit
                         </Button>
                       </div>

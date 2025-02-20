@@ -4,6 +4,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const exclusiveApi = createApi({
   reducerPath: "exclusive",
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_BACKEND_URL }),
+
   tagTypes: ["banner", "category"],
   endpoints: (builder) => ({
     UploadBanner: builder.mutation({
@@ -39,6 +40,28 @@ export const exclusiveApi = createApi({
       query: () => `category`,
       providesTags: ["category"],
     }),
+    DeleteCategory: builder.mutation({
+      query: (id) => ({
+        url: `category/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["category"],
+    }),
+    GetSingleCategory: builder.query({
+      query: (id) => `category/${id}`,
+      providesTags: ["category"],
+    }),
+    updateCategory: builder.mutation({
+      query: (data) => ({
+        url: `category/${data.id}`,
+        method: "put",
+        body: {
+          name: data.name,
+          description: data.description,
+        },
+      }),
+      invalidatesTags: ["category"],
+    }),
   }),
 });
 
@@ -50,4 +73,7 @@ export const {
   useUpdateBannerMutation,
   useUploadCategoryMutation,
   useGetAllCategoryQuery,
+  useDeleteCategoryMutation,
+  useGetSingleCategoryQuery,
+  useUpdateCategoryMutation,
 } = exclusiveApi;
